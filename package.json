@@ -1,0 +1,17 @@
+{
+  "name": "failed-message-command-center",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Failed Message Command Center — batched external detection + dashboard snapshot",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "demo": "node demo.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "axios": "^1.15.0"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "description": "Example message logs for the Failed Message Command Center. Each entry may include optional fields; only status and errorText drive processing.",
+  "logs": [
+    { "messageId": "msg-001", "status": "success", "to": "+15551230001" },
+    { "messageId": "msg-002", "status": "failed", "errorText": "401 Unauthorized: invalid API token", "to": "+15551230002" },
+    { "messageId": "msg-003", "status": "failed", "errorText": "429 Too Many Requests — rate limit exceeded", "to": "+15551230003" },
+    { "messageId": "msg-004", "status": "failed", "errorText": "Invalid phone format for destination", "to": "not-a-number" },
+    { "messageId": "msg-005", "status": "success", "to": "+15551230005" },
+    { "messageId": "msg-006", "status": "failed", "errorText": "Carrier rejected message: subscriber opted out", "to": "+15551230006" },
+    { "messageId": "msg-007", "status": "failed", "errorText": "Connection timeout contacting upstream gateway", "to": "+15551230007" },
+    { "messageId": "msg-008", "status": "failed", "errorText": "429 Too Many Requests — rate limit exceeded", "to": "+15551230008" },
+    { "messageId": "msg-009", "status": "failed", "errorText": "DNS lookup failed for sms.example.net", "to": "+15551230009" },
+    { "messageId": "msg-010", "status": "success", "to": "+15551230010" },
+    { "messageId": "msg-011", "status": "failed", "errorText": "Unknown internal error code 0xDEAD", "to": "+15551230011" },
+    { "messageId": "msg-012", "status": "failed", "errorText": "401 Unauthorized: invalid API token", "to": "+15551230012" }
+  ]
+}
