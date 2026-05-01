@@ -5,8 +5,8 @@
   "description": "Failed Message Command Center — batched external detection + dashboard snapshot",
   "main": "main.js",
   "scripts": {
-    "start": "node main.js",
-    "demo": "node demo.js"
+    "start": "node server.js",
+    "start:legacy": "node main.js"
   },
   "engines": {
     "node": ">=18"

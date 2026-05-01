@@ -1,8 +1,3 @@
-/**
- * Demo script: loads example test data, feeds the error processor, flushes the batch,
- * and prints the dashboard JSON line. Safe to run alongside the 30s background flush.
- */
-
 const fs = require("fs");
 const path = require("path");
 const {
@@ -17,6 +12,19 @@ const {
 const { buildDashboardPayload, sendDashboard } = require("./dashboardSender");
 
 const DEFAULT_DATA_FILE = path.join(__dirname, "exampleTestData.json");
+
+/**
+ * Resolve which JSON file to ingest: explicit path, then DATA_FILE (cwd-relative), else sample file.
+ * @param {string | undefined} explicitPath
+ */
+function resolveDataPath(explicitPath) {
+  if (explicitPath) return explicitPath;
+  const fromEnv = process.env.DATA_FILE;
+  if (fromEnv && String(fromEnv).trim()) {
+    return path.resolve(process.cwd(), fromEnv);
+  }
+  return DEFAULT_DATA_FILE;
+}
 
 /**
  * Normalize file contents: supports either `{ logs: [...] }` or a bare array.
@@ -34,15 +42,17 @@ function extractLogs(parsed) {
 }
 
 /**
- * Run the demo: ingest all logs, flush detector batch once, print dashboard.
+ * Ingest logs from a JSON file, flush detector batch, build dashboard payload.
  *
  * @param {{ dataPath?: string, useBackgroundFlush?: boolean }} [options]
- *   dataPath — JSON file path (default: exampleTestData.json next to this file)
+ *   dataPath — JSON file path; if omitted, uses env DATA_FILE (relative to cwd) or exampleTestData.json
  *   useBackgroundFlush — if true, start the 30s interval (still does one immediate flush at end)
  */
-async function runDemo(options = {}) {
-  const dataPath = options.dataPath || DEFAULT_DATA_FILE;
+async function runIngest(options = {}) {
+  const dataPath = resolveDataPath(options.dataPath);
   const useBackgroundFlush = options.useBackgroundFlush !== false;
+
+  console.log("Reading logs from:", dataPath);
 
   const raw = fs.readFileSync(dataPath, "utf8");
   const { logs } = extractLogs(JSON.parse(raw));
@@ -61,6 +71,9 @@ async function runDemo(options = {}) {
 
   const snapshot = getCountersSnapshot();
   const dashboard = buildDashboardPayload(snapshot);
+  console.log("totalSent:", dashboard.totalSent);
+  console.log("totalFailed:", dashboard.totalFailed);
+  console.log("failureRate:", dashboard.failureRate);
   sendDashboard(dashboard);
 
   if (useBackgroundFlush) {
@@ -71,7 +84,8 @@ async function runDemo(options = {}) {
 }
 
 module.exports = {
-  runDemo,
+  runIngest,
+  resolveDataPath,
   DEFAULT_DATA_FILE,
   extractLogs,
 };
@@ -80,8 +94,8 @@ if (require.main === module) {
   const customPath = process.argv[2];
   const dataPath = customPath
     ? path.resolve(process.cwd(), customPath)
-    : DEFAULT_DATA_FILE;
-  runDemo({ dataPath }).catch((err) => {
+    : undefined;
+  runIngest({ dataPath }).catch((err) => {
     console.error(err);
     process.exitCode = 1;
   });

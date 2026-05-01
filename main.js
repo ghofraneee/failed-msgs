@@ -1,21 +1,31 @@
-/**
- * Failed Message Command Center — entry point.
- *
- * Runs the demo using example test data from exampleTestData.json by default.
- * For a custom file: node main.js path/to/logs.json
- */
-
 const path = require("path");
-const { runDemo, DEFAULT_DATA_FILE } = require("./demo");
+const { runIngest } = require("./ingest");
 
 const customPath = process.argv[2];
 const dataPath = customPath
   ? path.resolve(process.cwd(), customPath)
-  : DEFAULT_DATA_FILE;
+  : undefined;
 
-runDemo({ dataPath })
-  .then(() => {})
-  .catch((err) => {
+async function main() {
+  try {
+    const result = await runIngest({ dataPath });
+
+    console.log("Result:", result);
+
+    // POST to Lovable API
+    await fetch("https://clienthub.systemicdigital.io", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(result),
+    });
+
+    console.log("Sent to KPI dashboard");
+  } catch (err) {
     console.error(err);
     process.exitCode = 1;
-  });
+  }
+}
+
+main();

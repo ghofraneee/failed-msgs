@@ -25,6 +25,7 @@ const errorBreakdown = {
   UNKNOWN_ERROR: 0,
 };
 
+let totalSentMessages = 0;
 let totalFailedMessages = 0;
 /** @type {ReturnType<typeof setInterval> | null} */
 let flushTimer = null;
@@ -87,9 +88,10 @@ function stopFlushLoop() {
 
 /**
  * Process one message log line.
- * @param {{ status: 'success' | 'failed'; errorText?: string }} log
+ * @param {{ status?: string; errorText?: string } | null | undefined} log
  */
 function processLog(log) {
+  totalSentMessages += 1;
   if (!log || log.status !== "failed") return;
 
   const err = typeof log.errorText === "string" ? log.errorText : "";
@@ -104,6 +106,7 @@ function processLog(log) {
  */
 function getCountersSnapshot() {
   return {
+    totalSent: totalSentMessages,
     totalFailedMessages,
     errorBreakdown: { ...errorBreakdown },
   };
@@ -115,6 +118,7 @@ function getCountersSnapshot() {
 function resetState() {
   stopFlushLoop();
   pendingAggregates = new Map();
+  totalSentMessages = 0;
   totalFailedMessages = 0;
   for (const k of Object.keys(errorBreakdown)) errorBreakdown[k] = 0;
 }

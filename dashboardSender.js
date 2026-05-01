@@ -30,18 +30,27 @@ function computeMostCommonError(breakdown) {
 /**
  * Build the dashboard object specified by the contract.
  *
- * @param {{ totalFailedMessages: number; errorBreakdown: Record<string, number> }} snapshot From errorProcessor
+ * @param {{ totalSent: number; totalFailedMessages: number; errorBreakdown: Record<string, number> }} snapshot From errorProcessor
  * @returns {{
+ *   totalSent: number,
  *   totalFailed: number,
+ *   failureRate: number | null,
  *   errorBreakdown: Record<string, number>,
  *   mostCommonError: string,
  *   timestamp: number
  * }}
  */
 function buildDashboardPayload(snapshot) {
+  const totalSent =
+    typeof snapshot.totalSent === "number" ? snapshot.totalSent : 0;
+  const totalFailed = snapshot.totalFailedMessages;
+  const failureRate =
+    totalSent === 0 ? null : (totalFailed / totalSent) * 100;
   const errorBreakdown = { ...snapshot.errorBreakdown };
   return {
-    totalFailed: snapshot.totalFailedMessages,
+    totalSent,
+    totalFailed,
+    failureRate,
     errorBreakdown,
     mostCommonError: computeMostCommonError(errorBreakdown),
     timestamp: Date.now(),
