@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "description": "Failed Message Command Center — batched external detection + dashboard snapshot",
-  "main": "main.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "start:legacy": "node main.js"
+    "ingest": "node ingest.js",
+    "kpi": "node main.js"
   },
   "engines": {
     "node": ">=18"
