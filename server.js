@@ -2,8 +2,16 @@ const fs = require("fs/promises");
 const http = require("http");
 const path = require("path");
 
-const PORT = Number(process.env.PORT) || 3001;
 const HOST = process.env.HOST || "0.0.0.0";
+const explicitPort = process.env.PORT;
+const userPinnedPort =
+  explicitPort !== undefined &&
+  String(explicitPort).trim() !== "" &&
+  !Number.isNaN(Number(explicitPort));
+const firstPort = userPinnedPort ? Number(explicitPort) : 3001;
+let port = firstPort;
+const maxBindAttempts = userPinnedPort ? 1 : 10;
+let bindAttempt = 0;
 const DATA_FILE = process.env.DATA_FILE
   ? path.resolve(process.cwd(), process.env.DATA_FILE)
   : path.join(__dirname, "exampleTestData.json");
@@ -111,6 +119,39 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, HOST, () => {
-  console.log(`Backend API ready at http://localhost:${PORT}/api/failed-messages`);
-});
+function onListenError(err) {
+  server.off("error", onListenError);
+  bindAttempt += 1;
+  if (err.code === "EADDRINUSE" && bindAttempt < maxBindAttempts && !userPinnedPort) {
+    port += 1;
+    tryListen();
+    return;
+  }
+  if (err.code === "EADDRINUSE") {
+    console.error(
+      userPinnedPort
+        ? `Port ${port} is already in use. Close the other process (e.g. another node server.js) or run: $env:PORT=3002; node server.js`
+        : `Ports ${firstPort}–${firstPort + maxBindAttempts - 1} are all in use. Set PORT to a free port.`
+    );
+  } else {
+    console.error(err);
+  }
+  process.exit(1);
+}
+
+function tryListen() {
+  server.once("error", onListenError);
+  server.listen(port, HOST, () => {
+    server.off("error", onListenError);
+    if (!userPinnedPort && port !== firstPort) {
+      console.warn(
+        `Port ${firstPort} was busy; listening on ${port} instead (set PORT to pin a port).`
+      );
+    }
+    console.log(
+      `Backend API ready at http://localhost:${port}/api/failed-messages`
+    );
+  });
+}
+
+tryListen();
