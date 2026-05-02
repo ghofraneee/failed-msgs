@@ -1,18 +1,18 @@
 const path = require("path");
 const { runIngest } = require("./ingest");
 
-const customPath = process.argv[2];
-const dataPath = customPath
-  ? path.resolve(process.cwd(), customPath)
-  : undefined;
-
-async function main() {
+module.exports = async (req, res) => {
   try {
+    const customPath = req.body?.dataPath;
+
+    const dataPath = customPath
+      ? path.resolve(process.cwd(), customPath)
+      : undefined;
+
     const result = await runIngest({ dataPath });
 
     console.log("Result:", result);
 
-    // POST to Lovable API
     await fetch("https://clienthub.systemicdigital.io", {
       method: "POST",
       headers: {
@@ -21,11 +21,16 @@ async function main() {
       body: JSON.stringify(result),
     });
 
-    console.log("Sent to KPI dashboard");
+    res.status(200).json({
+      success: true,
+      message: "Sent to KPI dashboard",
+      result,
+    });
   } catch (err) {
     console.error(err);
-    process.exitCode = 1;
-  }
-}
 
-main();
+    res.status(500).json({
+      error: err.message || "Internal Server Error",
+    });
+  }
+};
